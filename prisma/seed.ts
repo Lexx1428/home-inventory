@@ -10,8 +10,8 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email },
-    update: { passwordHash },
-    create: { email, name: "Home Admin", passwordHash }
+    update: { passwordHash, role: "ADMIN", isActive: true },
+    create: { email, name: "Home Admin", passwordHash, role: "ADMIN" }
   });
 
   const existingItems = await prisma.item.count();

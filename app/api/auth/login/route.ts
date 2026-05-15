@@ -20,11 +20,11 @@ export async function POST(request: Request) {
     where: { email: parsed.data.email.toLowerCase() }
   });
 
-  if (!user || !(await bcrypt.compare(parsed.data.password, user.passwordHash))) {
+  if (!user || !user.isActive || !(await bcrypt.compare(parsed.data.password, user.passwordHash))) {
     return NextResponse.json({ message: "Incorrect email or password." }, { status: 401 });
   }
 
-  const token = await createSession({ userId: user.id, email: user.email });
+  const token = await createSession({ userId: user.id, email: user.email, role: user.role });
   const response = NextResponse.json({ ok: true });
 
   response.cookies.set("session", token, {

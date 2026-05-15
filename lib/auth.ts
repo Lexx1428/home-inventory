@@ -7,6 +7,7 @@ const secret = new TextEncoder().encode(
 export type SessionPayload = {
   userId: string;
   email: string;
+  role: "ADMIN" | "USER";
 };
 
 export async function createSession(payload: SessionPayload) {
@@ -26,7 +27,8 @@ export async function verifySession(token?: string) {
     const { payload } = await jwtVerify(token, secret);
     return {
       userId: String(payload.userId),
-      email: String(payload.email)
+      email: String(payload.email),
+      role: payload.role === "ADMIN" ? "ADMIN" : "USER"
     };
   } catch {
     return null;

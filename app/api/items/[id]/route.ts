@@ -33,7 +33,13 @@ export async function PATCH(
     }
   });
 
-  return NextResponse.json({ ...item, unitCost: Number(item.unitCost) });
+  const unitCost = Number(item.unitCost);
+
+  return NextResponse.json({
+    ...item,
+    unitCost,
+    totalCost: unitCost * item.quantity
+  });
 }
 
 export async function DELETE(

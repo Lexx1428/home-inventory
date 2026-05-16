@@ -76,12 +76,22 @@ export function InventoryClient() {
   }
 
   async function updateQuantity(item: InventoryItem, quantity: number) {
-    await fetch(`/api/items/${item.id}`, {
+    const response = await fetch(`/api/items/${item.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...item, quantity })
     });
-    await loadItems();
+
+    if (!response.ok) {
+      return;
+    }
+
+    const updatedItem = await response.json();
+    setItems((currentItems) =>
+      currentItems.map((currentItem) =>
+        currentItem.id === updatedItem.id ? updatedItem : currentItem
+      )
+    );
   }
 
   async function deleteItem(item: InventoryItem) {

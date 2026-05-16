@@ -16,5 +16,13 @@ npm run prisma:migrate -- --name init
 npm run prisma:seed
 npm run dev
 ```
+Start db: 
+```
+docker compose up -d 
+```
+Stop db: 
+```
+docker compose down
+```
 
 The seed command creates the registered user used for login and adds a few starter pantry items when the inventory is empty.

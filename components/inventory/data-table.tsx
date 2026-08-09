@@ -10,7 +10,7 @@ import {
   useReactTable
 } from "@tanstack/react-table";
 import { useState } from "react";
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { ArrowUpDown, Check, Filter, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -20,6 +20,9 @@ import type { InventoryItem } from "./types";
 
 type InventoryDataTableProps = {
   data: InventoryItem[];
+  categories: string[];
+  categoryFilter: string;
+  onCategoryFilterChange: (category: string) => void;
   onEdit: (item: InventoryItem) => void;
   onDelete: (item: InventoryItem) => void;
   onQuantityChange: (item: InventoryItem, nextQuantity: number) => void;
@@ -27,6 +30,9 @@ type InventoryDataTableProps = {
 
 export function InventoryDataTable({
   data,
+  categories,
+  categoryFilter,
+  onCategoryFilterChange,
   onEdit,
   onDelete,
   onQuantityChange
@@ -51,7 +57,32 @@ export function InventoryDataTable({
     },
     {
       accessorKey: "category",
-      header: "Category",
+      header: () => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost">
+              Category
+              <Filter className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={() => onCategoryFilterChange("all")}>
+              <span className="flex min-w-32 items-center justify-between gap-3">
+                All categories
+                {categoryFilter === "all" ? <Check className="h-4 w-4" /> : null}
+              </span>
+            </DropdownMenuItem>
+            {categories.map((category) => (
+              <DropdownMenuItem key={category} onClick={() => onCategoryFilterChange(category)}>
+                <span className="flex min-w-32 items-center justify-between gap-3">
+                  {category}
+                  {categoryFilter === category ? <Check className="h-4 w-4" /> : null}
+                </span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
       cell: ({ row }) => <Badge variant="secondary">{row.original.category}</Badge>
     },
     {
@@ -89,12 +120,22 @@ export function InventoryDataTable({
     },
     {
       accessorKey: "unitCost",
-      header: "Unit cost",
+      header: ({ column }) => (
+        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          Unit cost
+          <ArrowUpDown className="h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => formatCurrency(row.original.unitCost)
     },
     {
       accessorKey: "totalCost",
-      header: "Total",
+      header: ({ column }) => (
+        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          Total
+          <ArrowUpDown className="h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => <span className="font-medium">{formatCurrency(row.original.totalCost)}</span>
     },
     {
@@ -126,6 +167,8 @@ export function InventoryDataTable({
     }
   ];
 
+  // TanStack Table intentionally returns function-bearing table objects.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

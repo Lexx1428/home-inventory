@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
 import { InventoryDataTable } from "./data-table";
 import { ItemForm } from "./item-form";
@@ -157,19 +156,6 @@ export function InventoryClient() {
             className="pl-9"
           />
         </div>
-        <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="sm:w-56">
-            <SelectValue placeholder="Filter category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All categories</SelectItem>
-            {categories.map((itemCategory) => (
-              <SelectItem key={itemCategory} value={itemCategory}>
-                {itemCategory}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       {loading ? (
@@ -179,6 +165,9 @@ export function InventoryClient() {
       ) : (
         <InventoryDataTable
           data={items}
+          categories={categories}
+          categoryFilter={category}
+          onCategoryFilterChange={setCategory}
           onEdit={openEditDialog}
           onDelete={deleteItem}
           onQuantityChange={updateQuantity}
@@ -188,6 +177,7 @@ export function InventoryClient() {
       <ItemForm
         open={dialogOpen}
         item={editingItem}
+        categories={categories}
         saving={saving}
         onOpenChange={setDialogOpen}
         onSubmit={saveItem}

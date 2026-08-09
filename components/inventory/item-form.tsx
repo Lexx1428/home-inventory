@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { InventoryItem, ItemFormValues } from "./types";
+
+const ADD_CATEGORY_VALUE = "__add_category__";
 
 const emptyValues: ItemFormValues = {
   name: "",
@@ -39,13 +43,48 @@ function valuesFromItem(item?: InventoryItem | null): ItemFormValues {
 type ItemFormProps = {
   open: boolean;
   item?: InventoryItem | null;
+  categories: string[];
   saving: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: ItemFormValues) => Promise<void>;
 };
 
-export function ItemForm({ open, item, saving, onOpenChange, onSubmit }: ItemFormProps) {
+export function ItemForm({ open, item, categories, saving, onOpenChange, onSubmit }: ItemFormProps) {
+  const formKey = `${open ? "open" : "closed"}-${item?.id ?? "new"}-${item?.category ?? ""}-${categories.join("|")}`;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <ItemFormContent
+        key={formKey}
+        item={item}
+        categories={categories}
+        saving={saving}
+        onSubmit={onSubmit}
+      />
+    </Dialog>
+  );
+}
+
+function ItemFormContent({
+  item,
+  categories,
+  saving,
+  onSubmit
+}: {
+  item?: InventoryItem | null;
+  categories: string[];
+  saving: boolean;
+  onSubmit: (values: ItemFormValues) => Promise<void>;
+}) {
   const defaults = valuesFromItem(item);
+  const hasExistingCategory = categories.includes(defaults.category);
+  const [selectedCategory, setSelectedCategory] = useState(
+    defaults.category && hasExistingCategory ? defaults.category : ADD_CATEGORY_VALUE
+  );
+  const [newCategory, setNewCategory] = useState(
+    defaults.category && !hasExistingCategory ? defaults.category : ""
+  );
+  const isAddingCategory = selectedCategory === ADD_CATEGORY_VALUE;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -53,7 +92,7 @@ export function ItemForm({ open, item, saving, onOpenChange, onSubmit }: ItemFor
 
     await onSubmit({
       name: String(formData.get("name") ?? ""),
-      category: String(formData.get("category") ?? ""),
+      category: isAddingCategory ? newCategory.trim() : selectedCategory,
       location: String(formData.get("location") ?? ""),
       quantity: Number(formData.get("quantity") ?? 0),
       lowStockAt: Number(formData.get("lowStockAt") ?? 0),
@@ -65,8 +104,7 @@ export function ItemForm({ open, item, saving, onOpenChange, onSubmit }: ItemFor
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+    <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{item ? "Edit item" : "Add item"}</DialogTitle>
           <DialogDescription>Keep costs and stock thresholds current.</DialogDescription>
@@ -78,8 +116,28 @@ export function ItemForm({ open, item, saving, onOpenChange, onSubmit }: ItemFor
               <Input id="name" name="name" defaultValue={defaults.name} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Input id="category" name="category" defaultValue={defaults.category} required />
+              <Label>Category</Label>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value={ADD_CATEGORY_VALUE}>Add category...</SelectItem>
+                </SelectContent>
+              </Select>
+              {isAddingCategory ? (
+                <Input
+                  value={newCategory}
+                  onChange={(event) => setNewCategory(event.target.value)}
+                  placeholder="New category"
+                  required
+                />
+              ) : null}
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -120,7 +178,6 @@ export function ItemForm({ open, item, saving, onOpenChange, onSubmit }: ItemFor
             {saving ? "Saving..." : "Save item"}
           </Button>
         </form>
-      </DialogContent>
-    </Dialog>
+    </DialogContent>
   );
 }

@@ -20,9 +20,14 @@ Start db:
 ```
 docker compose up -d 
 ```
-Stop db: 
+Stop db: (destroys the container) 
 ```
 docker compose down
+```
+
+Pause db: (better for day to day development)
+```
+docker compose stop
 ```
 
 The seed command creates the registered user used for login and adds a few starter pantry items when the inventory is empty.
